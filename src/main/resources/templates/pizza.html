@@ -6,7 +6,7 @@
 <body>
 <nav th:replace="fragments::menu"></nav>
 <h1 th:if="not ${pizza}">Pizza niet gevonden:
-    <span th:text="${id}"></span>
+    <span th:text="${pizza.id}"></span>
 </h1>
 <div th:if="${pizza}" th:object="${pizza}">
     <h1 th:text="*{naam}"></h1>
