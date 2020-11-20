@@ -3,6 +3,8 @@ package be.vdab.luigi.controllers;
 import be.vdab.luigi.domain.Pizza;
 import be.vdab.luigi.exceptions.KoersClientException;
 import be.vdab.luigi.services.EuroService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ class PizzaController {
             new Pizza(3, "Calzone", BigDecimal.valueOf(4), false)
     };
     private final EuroService euroService;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     PizzaController(EuroService euroService) {
         this.euroService = euroService;
@@ -44,7 +47,7 @@ class PizzaController {
                         modelAndView.addObject(
                                 "inDollar", euroService.naarDollar(pizza.getPrijs()));
                     } catch (KoersClientException ex) {
-
+                        logger.error("Kan dollar niet lezen", ex);
                     }
                 });
         return modelAndView;
