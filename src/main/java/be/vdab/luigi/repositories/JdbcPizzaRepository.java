@@ -57,6 +57,11 @@ public class JdbcPizzaRepository implements PizzaRepository{
     }
 
     @Override
+    public void deleteById(int id) {
+        template.update("delete from pizzas where id = ?", id);
+    }
+
+    @Override
     public List<Pizza> findAll() {
         var sql = "select id, naam, prijs, pikant from pizzas order by id";
         return template.query(sql,pizzaMapper);
@@ -74,7 +79,7 @@ public class JdbcPizzaRepository implements PizzaRepository{
 
     @Override
     public List<Pizza> findByPriceBetween(BigDecimal van, BigDecimal tot) {
-        var sql = "select id, naam, prijs, pikant from pizzas"
+        var sql = "select id, naam, prijs, pikant from pizzas "
                 + "where prijs between ? and ? order by prijs";
         return template.query(sql, pizzaMapper, van, tot);
     }
@@ -86,7 +91,7 @@ public class JdbcPizzaRepository implements PizzaRepository{
 
     @Override
     public List<BigDecimal> findUniekePrijzen() {
-        return template.query("select distinct prijs frompizzas order by prijs",
+        return template.query("select distinct prijs from pizzas order by prijs",
                 prijsMapper);
     }
 
@@ -98,6 +103,11 @@ public class JdbcPizzaRepository implements PizzaRepository{
 
     @Override
     public List<Pizza> findByIds(Set<Integer> ids) {
-        return null;
+        if (ids.isEmpty()){
+            return List.of();
+        }
+        var sql = "select id, naam, prijs, pikant from pizzas where id in ( "
+                + "?,".repeat(ids.size()-1) + "?) order by id";
+        return template.query(sql, pizzaMapper, ids.toArray());
     }
 }
