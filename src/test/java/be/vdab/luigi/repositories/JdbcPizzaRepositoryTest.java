@@ -22,6 +22,7 @@ public class JdbcPizzaRepositoryTest
     private final JdbcPizzaRepository repository;
 
     public JdbcPizzaRepositoryTest(JdbcPizzaRepository repository) {
+
         this.repository = repository;
     }
 

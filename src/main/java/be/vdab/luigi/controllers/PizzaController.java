@@ -3,6 +3,7 @@ package be.vdab.luigi.controllers;
 import be.vdab.luigi.domain.Pizza;
 import be.vdab.luigi.exceptions.KoersClientException;
 import be.vdab.luigi.services.EuroService;
+import be.vdab.luigi.services.PizzaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -25,54 +26,61 @@ class PizzaController {
             new Pizza(3, "Calzone", BigDecimal.valueOf(4), false)
     };
     private final EuroService euroService;
+    private final PizzaService pizzaService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    PizzaController(EuroService euroService) {
+    PizzaController(EuroService euroService, PizzaService pizzaService) {
         this.euroService = euroService;
+        this.pizzaService = pizzaService;
     }
 
     @GetMapping
     public ModelAndView pizzas(){
 
-        return new ModelAndView("pizzas", "pizzas", pizzas);
+        return new ModelAndView("pizzas", "pizzas", pizzaService.findAll());
     }
 
     @GetMapping("{id}")
     public ModelAndView pizza(@PathVariable int id){
         ModelAndView modelAndView = new ModelAndView("pizza");
-        Arrays.stream(pizzas).filter(pizza -> pizza.getId() == id).findFirst()
-                .ifPresent(pizza -> {
-                    modelAndView.addObject("pizza", pizza);
-                    try {
-                        modelAndView.addObject(
-                                "inDollar", euroService.naarDollar(pizza.getPrijs()));
-                    } catch (KoersClientException ex) {
-                        logger.error("Kan dollar niet lezen", ex);
-                    }
-                });
+        pizzaService.findById(id).ifPresent(pizza -> {
+            modelAndView.addObject("pizza", pizza);
+            try {
+                modelAndView.addObject("inDollar",
+                        euroService.naarDollar(pizza.getPrijs()));
+            } catch (KoersClientException ex) {
+                logger.error("Kan dollar niet lezen", ex);
+            }
+        });
         return modelAndView;
-    }
-
-    private List<BigDecimal> uniekePrijzen(){
-        return Arrays.stream(pizzas).map(pizza -> pizza.getPrijs())
-                .distinct().sorted().collect(Collectors.toList());
     }
 
     @GetMapping("prijzen")
     public ModelAndView prijzen(){
-        return new ModelAndView("prijzen", "prijzen", uniekePrijzen());
+        return new ModelAndView("prijzen", "prijzen",
+                pizzaService.findUniekePrijzen());
     }
 
+    @GetMapping("prijzen/{prijs}")
+    public ModelAndView pizzasMetEenPrijs(@PathVariable BigDecimal prijs){
+        ModelAndView modelAndView = new ModelAndView("prijzen", "pizzas",
+                pizzaService.findByPrijs(prijs));
+        modelAndView.addObject("prijzen",pizzaService.findUniekePrijzen());
+        return modelAndView;
+    }
+
+/*
+    private List<BigDecimal> uniekePrijzen(){
+        return Arrays.stream(pizzas).map(pizza -> pizza.getPrijs())
+                .distinct().sorted().collect(Collectors.toList());
+    }
+*/
+
+/*
     private List<Pizza> pizzasMetPrijs(BigDecimal prijs){
         return Arrays.stream(pizzas)
                 .filter(pizza -> pizza.getPrijs().compareTo(prijs) == 0)
                 .collect(Collectors.toList());
     }
-
-    @GetMapping("prijzen/{prijs}")
-    public ModelAndView pizzasMetEenPrijs(@PathVariable BigDecimal prijs){
-        ModelAndView modelAndView = new ModelAndView("prijzen", "pizzas", pizzasMetPrijs(prijs));
-        modelAndView.addObject("prijzen",uniekePrijzen());
-        return modelAndView;
-    }
+*/
 }
