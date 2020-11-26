@@ -11,14 +11,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("pizzas")
@@ -87,6 +86,22 @@ class PizzaController {
         }
         return modelAndView.addObject("pizzas",
                 pizzaService.findByPrijsBetween(form.getVan(), form.getTot()));
+    }
+
+    @GetMapping("toevoegen/form")
+    public ModelAndView toevoegenForm(){
+        return new ModelAndView("toevoegen")
+                .addObject(new Pizza(0,"", null, false));
+    }
+
+    @PostMapping
+    public String toevoegen(@Valid Pizza pizza, Errors errors, RedirectAttributes redirect){
+        if (errors.hasErrors()){
+            return "toevoegen";
+        }
+        var id = pizzaService.create(pizza);
+        redirect.addAttribute("toegevoegd", id);
+        return "redirect:/pizzas";
     }
 /*
     private List<BigDecimal> uniekePrijzen(){
